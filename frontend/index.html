@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Spam Email Detector</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <h1>Spam Email Detector</h1>
+        <textarea id="emailText" placeholder="Paste your email text here..."></textarea>
+        <button onclick="checkSpam()">Check</button>
+        <p id="result"></p>
+    </div>
+
+    <script>
+        async function checkSpam() {
+            const message = document.getElementById("emailText").value.trim();
+            const resultEl = document.getElementById("result");
+            resultEl.textContent = "Checking...";
+            try {
+                const res = await fetch("http://127.0.0.1:5000/predict", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ message })
+                });
+                if (!res.ok) {
+                    resultEl.textContent = "❌ Server error. Check backend logs.";
+                    console.error("Server returned error:", res.status, await res.text());
+                    return;
+                }
+                const data = await res.json();
+                console.log("Response from server:", data);
+                resultEl.textContent =
+                    data.prediction === "spam"
+                        ? "🚨 This looks like SPAM!"
+                        : "✅ This email seems safe.";
+            } catch (err) {
+                console.error("Fetch error:", err);
+                resultEl.textContent = "⚠️ Could not connect to backend.";
+            }
+        }
+    </script>
+</body>
+</html>
